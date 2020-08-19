@@ -1,0 +1,6 @@
+/.example
+/.idea
+/docker-compose.yml
+/Dockerfile
+/Makefile
+/vendor
