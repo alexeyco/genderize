@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// host genderzine.io host
+// host genderzine.io API host.
 const host = "https://api.genderize.io"
 
 // Gender type.

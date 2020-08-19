@@ -1,6 +1,7 @@
 package genderzine
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -78,11 +79,16 @@ func (c *Client) url(name string) (s string, err error) {
 	return
 }
 
-func (c *Client) request(u string) (r *Response, err error) {
+func (c *Client) request(ctx context.Context, u string) (r *Response, err error) {
 	c.muHTTPClient.Lock()
 	defer c.muHTTPClient.Unlock()
 
-	response, err := c.httpClient.Get(u)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "can't make new request")
+	}
+
+	response, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, errors.Wrapf(err, "can't get HTTP request to %s", u)
 	}
@@ -96,27 +102,16 @@ func (c *Client) request(u string) (r *Response, err error) {
 		return nil, errors.Wrap(err, "can't decode response body")
 	}
 
-	c.muInfo.Lock()
-	defer c.muInfo.Unlock()
-
-	h := response.Header
-	if c.info.Limit, err = strconv.ParseInt(h.Get("X-Rate-Limit-Limit"), 10, 64); err != nil {
-		return nil, errors.Wrapf(err, `can't parse "X-Rate-Limit-Limit" response header`)
+	if err = c.updateInfo(response.Header); err != nil {
+		return
 	}
-
-	if c.info.Remaining, err = strconv.ParseInt(h.Get("X-Rate-Limit-Remaining"), 10, 64); err != nil {
-		return nil, errors.Wrapf(err, `can't parse "X-Rate-Limit-Remaining" response header`)
-	}
-
-	reset, err := strconv.ParseInt(h.Get("X-Rate-Reset"), 10, 64)
-	if err != nil {
-		return nil, errors.Wrapf(err, `can't parse "X-Rate-Reset" response header`)
-	}
-
-	c.info.Reset = time.Duration(reset) * time.Second
 
 	if response.StatusCode == http.StatusOK {
 		r = &res.Response
+
+		if r.Gender != Female && r.Gender != Male {
+			r.Gender = Unknown
+		}
 
 		return
 	}
@@ -138,19 +133,41 @@ func (c *Client) request(u string) (r *Response, err error) {
 		}
 
 		return nil, ErrRequestLimitTooLow
-	default:
-		return nil, ErrUnknown
 	}
+
+	return nil, ErrUnknown
+}
+
+func (c *Client) updateInfo(h http.Header) (err error) {
+	c.muInfo.Lock()
+	defer c.muInfo.Unlock()
+
+	if c.info.Limit, err = strconv.ParseInt(h.Get("X-Rate-Limit-Limit"), 10, 64); err != nil {
+		return errors.Wrapf(err, `can't parse "X-Rate-Limit-Limit" response header`)
+	}
+
+	if c.info.Remaining, err = strconv.ParseInt(h.Get("X-Rate-Limit-Remaining"), 10, 64); err != nil {
+		return errors.Wrapf(err, `can't parse "X-Rate-Limit-Remaining" response header`)
+	}
+
+	reset, err := strconv.ParseInt(h.Get("X-Rate-Reset"), 10, 64)
+	if err != nil {
+		return errors.Wrapf(err, `can't parse "X-Rate-Reset" response header`)
+	}
+
+	c.info.Reset = time.Duration(reset) * time.Second
+
+	return
 }
 
 // Check returns gender info for name.
-func (c *Client) Check(name string) (res *Response, err error) {
+func (c *Client) Check(ctx context.Context, name string) (res *Response, err error) {
 	u, err := c.url(name)
 	if err != nil {
 		return nil, errors.Wrap(err, "can't generate API URL")
 	}
 
-	if res, err = c.request(u); err != nil {
+	if res, err = c.request(ctx, u); err != nil {
 		return
 	}
 
