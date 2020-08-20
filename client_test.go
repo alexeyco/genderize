@@ -257,6 +257,51 @@ func TestClient_Check_ErrRequestLimitTooLow(t *testing.T) {
 	}
 }
 
+var errWTF = errors.New("wtf")
+
+func TestClient_Check_ErrResponse(t *testing.T) {
+	client := genderize.New()
+
+	_, err := client.SetHTTPClient(newClient(func(req *http.Request) (*http.Response, error) {
+		return nil, errWTF
+	})).Check(context.Background(), "Alice")
+	if err == nil {
+		t.Error(`Error should not be nil`)
+	}
+
+	if !errors.Is(err, genderize.ErrResponse) {
+		t.Errorf(`Error should be "%s", "%s" given`, "genderize.ErrResponse", err)
+	}
+}
+
+func TestClient_Check_ErrResponseJSON(t *testing.T) {
+	client := genderize.New()
+
+	_, err := client.SetHTTPClient(newClient(func(req *http.Request) (res *http.Response, err error) {
+		header := http.Header{}
+		header.Add("X-Rate-Limit-Limit", "123")
+		header.Add("X-Rate-Limit-Remaining", "456")
+		header.Add("X-Rate-Reset", "789")
+
+		body := strings.NewReader(`{abc}`)
+
+		res = &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       ioutil.NopCloser(body),
+			Header:     header,
+		}
+
+		return
+	})).Check(context.Background(), "Alice")
+	if err == nil {
+		t.Error(`Error should not be nil`)
+	}
+
+	if !errors.Is(err, genderize.ErrResponseJSON) {
+		t.Errorf(`Error should be "%s", "%s" given`, "genderize.ErrResponseJSON", err)
+	}
+}
+
 func TestClient_Check_Ok(t *testing.T) {
 	client := genderize.New()
 
