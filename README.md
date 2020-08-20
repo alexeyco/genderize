@@ -21,7 +21,7 @@ func main() {
 	
     gender := client.ExecuteX(req).FirstX()
     // Or:
-    // gender := client.ExecuteX(context.TODO(), req).FindX("Alex")
+    // gender := client.ExecuteX(req).FindX("Alex")
 
     log.Println(fmt.Sprintf("%s is %s", gender.Name, gender.Gender))
 }
