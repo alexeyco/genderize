@@ -11,19 +11,19 @@ var (
 	// ErrResponseBody wrong response body.
 	ErrResponseBody = errors.New("response body error")
 
-	// ErrInvalidAPIKey
+	// ErrInvalidAPIKey API key is invalid.
 	ErrInvalidAPIKey = errors.New("invalid API key")
 
-	// ErrSubscriptionIsNotActive
+	// ErrSubscriptionIsNotActive subscriptions problem.
 	ErrSubscriptionIsNotActive = errors.New("subscription is not active")
 
-	// ErrValidation
+	// ErrValidation validation error.
 	ErrValidation = errors.New("validation error")
 
-	// ErrTooManyRequests
+	// ErrTooManyRequests too many requests.
 	ErrTooManyRequests = errors.New("too many requests")
 
-	// ErrInternal
+	// ErrInternal internal API server error.
 	ErrInternal = errors.New("internal API error")
 
 	// ErrNothingFound nothing found error.

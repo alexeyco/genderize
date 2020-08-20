@@ -48,9 +48,9 @@ func (c *Client) Execute(request *Request) (collection *Collection, err error) {
 	return
 }
 
+// ExecuteX like Execute, but panics when error.
 func (c *Client) ExecuteX(request *Request) *Collection {
 	collection, err := c.Execute(request)
-
 	if err != nil {
 		panic(err)
 	}
@@ -60,7 +60,9 @@ func (c *Client) ExecuteX(request *Request) *Collection {
 
 func (c *Client) processAPIResponse(res *http.Response) (collection *Collection, err error) {
 	collection = &Collection{}
-	if collection.info, err = c.processInfo(res); err != nil {
+
+	collection.info, err = c.processInfo(res)
+	if err != nil {
 		return
 	}
 

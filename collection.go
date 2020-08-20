@@ -91,8 +91,10 @@ func (c *Collection) FirstX() *Gender {
 	return g
 }
 
+// CollectionEachCallback iteration callback.
 type CollectionEachCallback func(g *Gender)
 
+// Each iterate over collection.
 func (c *Collection) Each(fn CollectionEachCallback) error {
 	if c.Length() == 0 {
 		return ErrNothingFound
@@ -105,6 +107,7 @@ func (c *Collection) Each(fn CollectionEachCallback) error {
 	return nil
 }
 
+// EachX like Each, but panics when error.
 func (c *Collection) EachX(fn CollectionEachCallback) {
 	if err := c.Each(fn); err != nil {
 		panic(err)
