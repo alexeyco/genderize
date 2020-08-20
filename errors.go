@@ -21,6 +21,18 @@ var (
 	// ErrRequestLimitTooLow request limit too low to process request error.
 	ErrRequestLimitTooLow = errors.New("request limit too low to process request")
 
+	// ErrAPIURL can't generate API URL error.
+	ErrAPIURL = errors.New("can't generate API URL")
+
+	// ErrMakeRequest can't make new request error.
+	ErrMakeRequest = errors.New("can't make new request")
+
+	// ErrResponse wrong API response error.
+	ErrResponse = errors.New("wrong API response")
+
+	// ErrResponseJSON wrong API response JSON error.
+	ErrResponseJSON = errors.New("wrong API response JSON")
+
 	// ErrEmptyXRateLimitLimit empty X-Rate-Limit-Limit response header.
 	ErrEmptyXRateLimitLimit = errors.New("empty X-Rate-Limit-Limit response header")
 

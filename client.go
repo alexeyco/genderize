@@ -8,8 +8,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 type apiResponse struct {
@@ -85,12 +83,12 @@ func (c *Client) request(ctx context.Context, u string) (r *Response, err error)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "can't make new request")
+		return nil, ErrMakeRequest
 	}
 
 	response, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't get HTTP request to %s", u)
+		return nil, ErrResponse
 	}
 
 	defer func() {
@@ -99,7 +97,7 @@ func (c *Client) request(ctx context.Context, u string) (r *Response, err error)
 
 	var res apiResponse
 	if err = json.NewDecoder(response.Body).Decode(&res); err != nil {
-		return nil, errors.Wrap(err, "can't decode response body")
+		return nil, ErrResponseJSON
 	}
 
 	if err = c.updateInfo(response.Header); err != nil {
@@ -179,7 +177,7 @@ func (c *Client) updateInfo(h http.Header) (err error) {
 func (c *Client) Check(ctx context.Context, name string) (res *Response, err error) {
 	u, err := c.url(name)
 	if err != nil {
-		return nil, errors.Wrap(err, "can't generate API URL")
+		return nil, ErrAPIURL
 	}
 
 	if res, err = c.request(ctx, u); err != nil {

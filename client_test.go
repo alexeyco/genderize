@@ -89,6 +89,174 @@ func TestClient_SetAPIKey_NonEmpty(t *testing.T) {
 	}
 }
 
+func TestClient_Check_ErrInvalidAPIKey(t *testing.T) {
+	client := genderize.New()
+
+	_, err := client.SetHTTPClient(newClient(func(req *http.Request) (res *http.Response, err error) {
+		header := http.Header{}
+		header.Add("X-Rate-Limit-Limit", "123")
+		header.Add("X-Rate-Limit-Remaining", "456")
+		header.Add("X-Rate-Reset", "789")
+
+		body := strings.NewReader(`{"error":"Invalid API key"}`)
+
+		res = &http.Response{
+			StatusCode: http.StatusUnauthorized,
+			Body:       ioutil.NopCloser(body),
+			Header:     header,
+		}
+
+		return
+	})).Check(context.Background(), "Alice")
+	if err == nil {
+		t.Error(`Error should not be nil`)
+	}
+
+	if !errors.Is(err, genderize.ErrInvalidAPIKey) {
+		t.Errorf(`Error should be "%s", "%s" given`, "genderize.ErrInvalidAPIKey", err)
+	}
+}
+
+func TestClient_Check_ErrSubscriptionIsNotActive(t *testing.T) {
+	client := genderize.New()
+
+	_, err := client.SetHTTPClient(newClient(func(req *http.Request) (res *http.Response, err error) {
+		header := http.Header{}
+		header.Add("X-Rate-Limit-Limit", "123")
+		header.Add("X-Rate-Limit-Remaining", "456")
+		header.Add("X-Rate-Reset", "789")
+
+		body := strings.NewReader(`{"error":"Subscription is not active"}`)
+
+		res = &http.Response{
+			StatusCode: http.StatusPaymentRequired,
+			Body:       ioutil.NopCloser(body),
+			Header:     header,
+		}
+
+		return
+	})).Check(context.Background(), "Alice")
+	if err == nil {
+		t.Error(`Error should not be nil`)
+	}
+
+	if !errors.Is(err, genderize.ErrSubscriptionIsNotActive) {
+		t.Errorf(`Error should be "%s", "%s" given`, "genderize.ErrSubscriptionIsNotActive", err)
+	}
+}
+
+func TestClient_Check_ErrMissingName(t *testing.T) {
+	client := genderize.New()
+
+	_, err := client.SetHTTPClient(newClient(func(req *http.Request) (res *http.Response, err error) {
+		header := http.Header{}
+		header.Add("X-Rate-Limit-Limit", "123")
+		header.Add("X-Rate-Limit-Remaining", "456")
+		header.Add("X-Rate-Reset", "789")
+
+		body := strings.NewReader(`{"error":"Missing 'name' parameter"}`)
+
+		res = &http.Response{
+			StatusCode: http.StatusUnprocessableEntity,
+			Body:       ioutil.NopCloser(body),
+			Header:     header,
+		}
+
+		return
+	})).Check(context.Background(), "Alice")
+	if err == nil {
+		t.Error(`Error should not be nil`)
+	}
+
+	if !errors.Is(err, genderize.ErrMissingName) {
+		t.Errorf(`Error should be "%s", "%s" given`, "genderize.ErrMissingName", err)
+	}
+}
+
+func TestClient_Check_ErrInvalidName(t *testing.T) {
+	client := genderize.New()
+
+	_, err := client.SetHTTPClient(newClient(func(req *http.Request) (res *http.Response, err error) {
+		header := http.Header{}
+		header.Add("X-Rate-Limit-Limit", "123")
+		header.Add("X-Rate-Limit-Remaining", "456")
+		header.Add("X-Rate-Reset", "789")
+
+		body := strings.NewReader(`{"error":"Invalid 'name' parameter"}`)
+
+		res = &http.Response{
+			StatusCode: http.StatusUnprocessableEntity,
+			Body:       ioutil.NopCloser(body),
+			Header:     header,
+		}
+
+		return
+	})).Check(context.Background(), "Alice")
+	if err == nil {
+		t.Error(`Error should not be nil`)
+	}
+
+	if !errors.Is(err, genderize.ErrInvalidName) {
+		t.Errorf(`Error should be "%s", "%s" given`, "genderize.ErrInvalidName", err)
+	}
+}
+
+func TestClient_Check_ErrRequestLimitReached(t *testing.T) {
+	client := genderize.New()
+
+	_, err := client.SetHTTPClient(newClient(func(req *http.Request) (res *http.Response, err error) {
+		header := http.Header{}
+		header.Add("X-Rate-Limit-Limit", "123")
+		header.Add("X-Rate-Limit-Remaining", "456")
+		header.Add("X-Rate-Reset", "789")
+
+		body := strings.NewReader(`{"error":"Request limit reached"}`)
+
+		res = &http.Response{
+			StatusCode: http.StatusTooManyRequests,
+			Body:       ioutil.NopCloser(body),
+			Header:     header,
+		}
+
+		return
+	})).Check(context.Background(), "Alice")
+	if err == nil {
+		t.Error(`Error should not be nil`)
+	}
+
+	if !errors.Is(err, genderize.ErrRequestLimitReached) {
+		t.Errorf(`Error should be "%s", "%s" given`, "genderize.ErrRequestLimitReached", err)
+	}
+}
+
+func TestClient_Check_ErrRequestLimitTooLow(t *testing.T) {
+	client := genderize.New()
+
+	_, err := client.SetHTTPClient(newClient(func(req *http.Request) (res *http.Response, err error) {
+		header := http.Header{}
+		header.Add("X-Rate-Limit-Limit", "123")
+		header.Add("X-Rate-Limit-Remaining", "456")
+		header.Add("X-Rate-Reset", "789")
+
+		body := strings.NewReader(`{"error":"Request limit too low to process request"}`)
+
+		res = &http.Response{
+			StatusCode: http.StatusTooManyRequests,
+			Body:       ioutil.NopCloser(body),
+			Header:     header,
+		}
+
+		return
+	})).Check(context.Background(), "Alice")
+	if err == nil {
+		t.Error(`Error should not be nil`)
+	}
+
+	if !errors.Is(err, genderize.ErrRequestLimitTooLow) {
+		t.Errorf(`Error should be "%s", "%s" given`, "genderize.ErrRequestLimitTooLow", err)
+	}
+}
+
 func TestClient_Check_Ok(t *testing.T) {
 	client := genderize.New()
 
