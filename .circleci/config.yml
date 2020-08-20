@@ -10,7 +10,7 @@ jobs:
     working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
     steps:
       - checkout
-      - install:
+      - prepare:
           name: Install tools
           command: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.30.0
       - run: golangci-lint --exclude-use-default=false run ./...
@@ -21,7 +21,7 @@ jobs:
     working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
     steps:
       - checkout
-      - install:
+      - prepare:
           name: Install tools
           command: GO111MODULE=off go get github.com/mattn/goveralls
       - tests:
