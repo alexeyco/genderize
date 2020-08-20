@@ -1,6 +1,7 @@
 package genderize_test
 
 import (
+	"context"
 	"net/url"
 	"reflect"
 	"testing"
@@ -14,22 +15,24 @@ type requestTableRow struct {
 }
 
 func TestNewRequest_Encode(t *testing.T) {
+	ctx := context.TODO()
+
 	table := []requestTableRow{
 		{
 			should: "https://api.genderize.io?name%5B%5D=Alice",
-			given:  genderize.NewRequest().Name("Alice").Encode(),
+			given:  genderize.NewRequest(ctx).Name("Alice").Encode(),
 		},
 		{
 			should: "https://api.genderize.io?name%5B%5D=Alice&country_id=US",
-			given:  genderize.NewRequest().Name("Alice").CountryID("US").Encode(),
+			given:  genderize.NewRequest(ctx).Name("Alice").CountryID("US").Encode(),
 		},
 		{
 			should: "https://api.genderize.io?name%5B%5D=Alice&name%5B%5D=John&country_id=US",
-			given:  genderize.NewRequest().Name("Alice").Name("John").CountryID("US").Encode(),
+			given:  genderize.NewRequest(ctx).Name("Alice").Name("John").CountryID("US").Encode(),
 		},
 		{
 			should: "https://api.genderize.io?name%5B%5D=Alice&name%5B%5D=John&country_id=US&apikey=MyAwesomeAPIKey",
-			given:  genderize.NewRequest().Name("Alice").Name("John").CountryID("US").Encode("MyAwesomeAPIKey"),
+			given:  genderize.NewRequest(ctx).Name("Alice").Name("John").CountryID("US").Encode("MyAwesomeAPIKey"),
 		},
 	}
 

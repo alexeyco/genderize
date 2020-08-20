@@ -41,7 +41,6 @@ import (
 
 func main() {
 	client := genderize.NewClient()
-
 	req := genderize.NewRequest(context.TODO()).
 		Name("Alex").
 		Name("John").
