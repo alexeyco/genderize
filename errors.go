@@ -1,4 +1,4 @@
-package genderzine
+package genderize
 
 import "errors"
 
@@ -20,6 +20,24 @@ var (
 
 	// ErrRequestLimitTooLow request limit too low to process request error.
 	ErrRequestLimitTooLow = errors.New("request limit too low to process request")
+
+	// ErrEmptyXRateLimitLimit empty X-Rate-Limit-Limit response header.
+	ErrEmptyXRateLimitLimit = errors.New("empty X-Rate-Limit-Limit response header")
+
+	// ErrEmptyXRateLimitRemaining empty X-Rate-Limit-Limit response header.
+	ErrEmptyXRateLimitRemaining = errors.New("empty X-Rate-Limit-Remaining response header")
+
+	// ErrEmptyXRateReset empty X-Rate-Reset response header.
+	ErrEmptyXRateReset = errors.New("empty X-Rate-Reset response header")
+
+	// ErrWrongXRateLimitLimit wrong X-Rate-Limit-Limit response header.
+	ErrWrongXRateLimitLimit = errors.New("wrong X-Rate-Limit-Limit response header")
+
+	// ErrWrongXRateLimitRemaining wrong X-Rate-Limit-Remaining response header.
+	ErrWrongXRateLimitRemaining = errors.New("wrong X-Rate-Limit-Remaining response header")
+
+	// ErrWrongXRateReset wrong X-Rate-Reset response header.
+	ErrWrongXRateReset = errors.New("wrong X-Rate-Reset response header")
 
 	// ErrUnknown unknown error.
 	ErrUnknown = errors.New("something went wrong")

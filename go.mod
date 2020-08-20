@@ -1,4 +1,4 @@
-module github.com/alexeyco/genderzine
+module github.com/alexeyco/genderize
 
 go 1.15
 

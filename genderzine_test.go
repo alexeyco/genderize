@@ -1,14 +1,14 @@
-package genderzine_test
+package genderize_test
 
 import (
 	"context"
 	"log"
 
-	"github.com/alexeyco/genderzine"
+	"github.com/alexeyco/genderize"
 )
 
 func Example() {
-	client := genderzine.New()
+	client := genderize.New()
 
 	res, err := client.Check(context.Background(), "Alice")
 	if err != nil {

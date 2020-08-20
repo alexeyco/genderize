@@ -1,1 +1,1 @@
-# genderzine
+# genderize

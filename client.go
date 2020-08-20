@@ -1,4 +1,4 @@
-package genderzine
+package genderize
 
 import (
 	"context"
@@ -17,7 +17,7 @@ type apiResponse struct {
 	Error string `json:"error,omitempty"`
 }
 
-// Client of genderzine.io.
+// Client of genderize.io.
 type Client struct {
 	muHTTPClient sync.Mutex
 	httpClient   *http.Client
@@ -142,22 +142,37 @@ func (c *Client) updateInfo(h http.Header) (err error) {
 	c.muInfo.Lock()
 	defer c.muInfo.Unlock()
 
-	if c.info.Limit, err = strconv.ParseInt(h.Get("X-Rate-Limit-Limit"), 10, 64); err != nil {
-		return errors.Wrapf(err, `can't parse "X-Rate-Limit-Limit" response header`)
+	v := h.Get("X-Rate-Limit-Limit")
+	if v == "" {
+		return ErrEmptyXRateLimitLimit
 	}
 
-	if c.info.Remaining, err = strconv.ParseInt(h.Get("X-Rate-Limit-Remaining"), 10, 64); err != nil {
-		return errors.Wrapf(err, `can't parse "X-Rate-Limit-Remaining" response header`)
+	if c.info.Limit, err = strconv.ParseInt(v, 10, 64); err != nil {
+		return ErrWrongXRateLimitLimit
+	}
+
+	v = h.Get("X-Rate-Limit-Remaining")
+	if v == "" {
+		return ErrEmptyXRateLimitRemaining
+	}
+
+	if c.info.Remaining, err = strconv.ParseInt(v, 10, 64); err != nil {
+		return ErrWrongXRateLimitRemaining
+	}
+
+	v = h.Get("X-Rate-Reset")
+	if v == "" {
+		return ErrEmptyXRateReset
 	}
 
 	reset, err := strconv.ParseInt(h.Get("X-Rate-Reset"), 10, 64)
 	if err != nil {
-		return errors.Wrapf(err, `can't parse "X-Rate-Reset" response header`)
+		return ErrWrongXRateReset
 	}
 
 	c.info.Reset = time.Duration(reset) * time.Second
 
-	return
+	return nil
 }
 
 // Check returns gender info for name.

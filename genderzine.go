@@ -1,11 +1,11 @@
-package genderzine
+package genderize
 
 import (
 	"net/http"
 	"time"
 )
 
-// host genderzine.io API host.
+// host genderize.io API host.
 const host = "https://api.genderize.io"
 
 // Gender type.
@@ -42,7 +42,7 @@ type Response struct {
 	Count       int64   `json:"count,omitempty"`
 }
 
-// New returns new genderzine.io API client instance.
+// New returns new genderize.io API client instance.
 func New() *Client {
 	return &Client{
 		httpClient: http.DefaultClient,

@@ -1,2 +1,2 @@
-// Package genderzine API client for genderzine.io
-package genderzine
+// Package genderize API client for genderize.io
+package genderize

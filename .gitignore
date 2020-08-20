@@ -1,5 +1,6 @@
 /.example
 /.idea
+/coverage.out
 /docker-compose.yml
 /Dockerfile
 /Makefile
