@@ -20,8 +20,8 @@ jobs:
     steps:
       - checkout
       - run: GO111MODULE=off go get github.com/mattn/goveralls
-      - run: go test -v -cover -race -coverprofile=/home/circleci/test/coverage.out
-      - run: $GOPATH/bin/goveralls -coverprofile=/home/circleci/test/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
+      - run: go test -v -cover -race -coverprofile=coverage.out
+      - run: $GOPATH/bin/goveralls -coverprofile=/go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
 
 workflows:
   version: 2
