@@ -3,10 +3,16 @@ package genderize
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 )
+
+// Error response error.
+type Error struct {
+	Error string `json:"error,omitempty"`
+}
 
 // Client genderize API client.
 type Client struct {
@@ -14,8 +20,10 @@ type Client struct {
 }
 
 // Execute executes API request and returns result.
-func (c *Client) Execute(ctx context.Context, request *Request) (response *Response, info *Info, err error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, request.Encode(c.options.APIKey), nil)
+func (c *Client) Execute(ctx context.Context, request *Request) (collection *Collection, err error) {
+	u := request.Encode(c.options.APIKey)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 	if err != nil {
 		return
 	}
@@ -29,26 +37,50 @@ func (c *Client) Execute(ctx context.Context, request *Request) (response *Respo
 		_ = res.Body.Close()
 	}()
 
-	response, info, err = c.processAPIResponse(res)
+	collection, err = c.processAPIResponse(res)
 
 	return
 }
 
-func (c *Client) processAPIResponse(res *http.Response) (response *Response, info *Info, err error) {
-	var apiRes apiResponse
-	if err = json.NewDecoder(res.Body).Decode(&apiRes); err != nil {
+func (c *Client) ExecuteX(ctx context.Context, request *Request) *Collection {
+	collection, err := c.Execute(ctx, request)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return collection
+}
+
+func (c *Client) processAPIResponse(res *http.Response) (collection *Collection, err error) {
+	collection = &Collection{}
+	if collection.info, err = c.processInfo(res); err != nil {
 		return
 	}
 
-	if res.StatusCode == http.StatusOK {
-		if info, err = c.processInfo(res); err != nil {
-			return
-		}
-
-		response, err = c.processResponse(res)
-
-		return
+	switch res.StatusCode {
+	case http.StatusOK:
+		collection.genders, err = c.processResponse(res)
+	case http.StatusUnauthorized:
+		err = ErrInvalidAPIKey
+	case http.StatusPaymentRequired:
+		err = ErrSubscriptionIsNotActive
+	case http.StatusUnprocessableEntity:
+		err = fmt.Errorf(`%w cause %s`, ErrValidation, c.processError(res))
+	case http.StatusTooManyRequests:
+		err = fmt.Errorf(`%w cause %s`, ErrTooManyRequests, c.processError(res))
+	default:
+		err = ErrInternal
 	}
+
+	return
+}
+
+func (c *Client) processError(res *http.Response) (s string) {
+	var e Error
+	_ = json.NewDecoder(res.Body).Decode(&e)
+
+	s = e.Error
 
 	return
 }
@@ -57,6 +89,8 @@ func (c *Client) processInfo(res *http.Response) (info *Info, err error) {
 	i := &Info{}
 
 	if i.Limit, err = c.processHeader(res, "X-Rate-Limit-Limit"); err != nil {
+		err = fmt.Errorf(`%w %s`, ErrResponseHeader, err)
+
 		return
 	}
 
@@ -79,27 +113,25 @@ func (c *Client) processHeader(res *http.Response, header string) (value int64, 
 
 	value, err = strconv.ParseInt(v, 10, 64)
 	if err != nil {
-		err = &ErrResponseHeader{
-			header: header,
-			value:  v,
-			err:    err,
-		}
+		err = fmt.Errorf(`(%s: %s): %w`, header, v, err)
 	}
 
 	return
 }
 
-func (c *Client) processResponse(res *http.Response) (response *Response, err error) {
-	var apiRes apiResponse
+func (c *Client) processResponse(res *http.Response) (genders map[string]*Gender, err error) {
+	var apiRes []*Gender
 	if err = json.NewDecoder(res.Body).Decode(&apiRes); err != nil {
-		err = &ErrResponse{
-			err: err,
-		}
+		err = fmt.Errorf("%w: %s", ErrResponseBody, err)
 
 		return
 	}
 
-	response = &apiRes.Response
+	genders = map[string]*Gender{}
+
+	for _, g := range apiRes {
+		genders[g.Name] = g
+	}
 
 	return
 }

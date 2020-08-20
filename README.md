@@ -1,6 +1,59 @@
 # Genderize
 API-client for [genderize.io](https://genderize.io) – determine the gender of a name.
 
+## Usage
+### Check single name
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+
+	"github.com/alexeyco/genderize"
+)
+
+func main() {
+    client := genderize.NewClient()
+    req := genderize.NewRequest().Name("Alex")
+	
+    gender := client.ExecuteX(context.TODO(), req).FirstX()
+    // Or:
+    // gender := client.ExecuteX(context.TODO(), req).FindX("Alex")
+
+    log.Println(fmt.Sprintf("%s is %s", gender.Name, gender.Gender))
+}
+```
+
+### Iterate over results collection
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+
+	"github.com/alexeyco/genderize"
+)
+
+func main() {
+	client := genderize.NewClient()
+
+	req := genderize.NewRequest().
+		Name("Alex").
+		Name("John").
+		Name("Alice")
+
+	collection := client.ExecuteX(context.TODO(), req)
+
+	collection.EachX(func(g *genderize.Gender) {
+		log.Println(fmt.Sprintf("%s is %s", g.Name, g.Gender))
+	})
+}
+```
+
 ## License
 ```
 MIT License

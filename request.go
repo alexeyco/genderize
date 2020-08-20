@@ -20,7 +20,7 @@ func (r *Request) Name(name ...string) *Request {
 	defer r.mu.Unlock()
 
 	for _, n := range name {
-		r.query.Add("name", n)
+		r.query.Add("name[]", n)
 	}
 
 	return r
@@ -41,7 +41,7 @@ func (r *Request) Encode(apiKey ...string) string {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if len(apiKey) != 0 {
+	if len(apiKey) != 0 && apiKey[0] != "" {
 		r.query.Set("apikey", apiKey[0])
 	}
 

@@ -1,41 +1,31 @@
 package genderize
 
-import "fmt"
+import (
+	"errors"
+)
 
-// ErrResponseHeader API response header error.
-type ErrResponseHeader struct {
-	header string
-	value  string
-	err    error
-}
+var (
+	// ErrResponseHeader wrong response header.
+	ErrResponseHeader = errors.New("response header error")
 
-// Header returns problem header.
-func (e *ErrResponseHeader) Header() string {
-	return e.header
-}
+	// ErrResponseBody wrong response body.
+	ErrResponseBody = errors.New("response body error")
 
-// Value returns problem header value.
-func (e *ErrResponseHeader) Value() string {
-	return e.value
-}
+	// ErrInvalidAPIKey
+	ErrInvalidAPIKey = errors.New("invalid API key")
 
-// Error returns error as a string.
-func (e *ErrResponseHeader) Error() string {
-	return fmt.Sprintf(`response header "%s" with value "%s" is wrong cause %s`, e.header, e.value, e.err)
-}
+	// ErrSubscriptionIsNotActive
+	ErrSubscriptionIsNotActive = errors.New("subscription is not active")
 
-// ErrResponse response error.
-type ErrResponse struct {
-	body []byte
-	err  error
-}
+	// ErrValidation
+	ErrValidation = errors.New("validation error")
 
-// Body returns response body as a string.
-func (e *ErrResponse) Body() string {
-	return string(e.body)
-}
+	// ErrTooManyRequests
+	ErrTooManyRequests = errors.New("too many requests")
 
-// Error returns error as a string.
-func (e *ErrResponse) Error() string {
-	return fmt.Sprintf(`response body "%s" is wronf cause %s`, string(e.body), e.err)
-}
+	// ErrInternal
+	ErrInternal = errors.New("internal API error")
+
+	// ErrNothingFound nothing found error.
+	ErrNothingFound = errors.New("nothing found")
+)

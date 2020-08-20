@@ -16,19 +16,19 @@ type requestTableRow struct {
 func TestNewRequest_Encode(t *testing.T) {
 	table := []requestTableRow{
 		{
-			should: "https://api.genderize.io?name=Alice",
+			should: "https://api.genderize.io?name%5B%5D=Alice",
 			given:  genderize.NewRequest().Name("Alice").Encode(),
 		},
 		{
-			should: "https://api.genderize.io?name=Alice&country_id=US",
+			should: "https://api.genderize.io?name%5B%5D=Alice&country_id=US",
 			given:  genderize.NewRequest().Name("Alice").CountryID("US").Encode(),
 		},
 		{
-			should: "https://api.genderize.io?name=Alice&name=John&country_id=US",
+			should: "https://api.genderize.io?name%5B%5D=Alice&name%5B%5D=John&country_id=US",
 			given:  genderize.NewRequest().Name("Alice").Name("John").CountryID("US").Encode(),
 		},
 		{
-			should: "https://api.genderize.io?name=Alice&name=John&country_id=US&apikey=MyAwesomeAPIKey",
+			should: "https://api.genderize.io?name%5B%5D=Alice&name%5B%5D=John&country_id=US&apikey=MyAwesomeAPIKey",
 			given:  genderize.NewRequest().Name("Alice").Name("John").CountryID("US").Encode("MyAwesomeAPIKey"),
 		},
 	}
