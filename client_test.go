@@ -89,7 +89,44 @@ func TestClient_SetAPIKey_NonEmpty(t *testing.T) {
 	}
 }
 
-func TestClient_Check(t *testing.T) {
+func TestClient_Check_Ok(t *testing.T) {
+	client := genderize.New()
+
+	res, err := client.SetHTTPClient(newClient(func(req *http.Request) (res *http.Response, err error) {
+		header := http.Header{}
+		header.Add("X-Rate-Limit-Limit", "123")
+		header.Add("X-Rate-Limit-Remaining", "456")
+		header.Add("X-Rate-Reset", "789")
+
+		body := strings.NewReader(`{"name":"Name","gender":"male","probability":0.1,"count":5}`)
+
+		res = &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       ioutil.NopCloser(body),
+			Header:     header,
+		}
+
+		return
+	})).Check(context.Background(), "Alice")
+	if err != nil {
+		t.Errorf(`Error should be nil, "%s" given`, err)
+	}
+
+	if res.Name != "Name" {
+		t.Errorf(`Name should be "%s", "%s" given`, "Name", res.Name)
+	}
+
+	if res.Gender != "male" {
+		t.Errorf(`Gender should be "%s", "%s" given`, "male", res.Gender)
+	}
+
+	if res.Probability != .1 {
+		t.Errorf(`Gender should be %f, %f given`, .1, res.Probability)
+	}
+
+	if res.Count != 5 {
+		t.Errorf(`Count should be %d, %d given`, 5, res.Count)
+	}
 }
 
 func TestClient_Info_EmptyXRateLimitLimit(t *testing.T) {
