@@ -1,6 +1,7 @@
 package genderize
 
 import (
+	"context"
 	"net/url"
 	"sync"
 )
@@ -9,6 +10,8 @@ const endpoint = "https://api.genderize.io"
 
 // Request API request.
 type Request struct {
+	ctx context.Context
+
 	mu    sync.Mutex
 	url   *url.URL
 	query url.Values
@@ -51,8 +54,9 @@ func (r *Request) Encode(apiKey ...string) string {
 }
 
 // NewRequest returns new request instance.
-func NewRequest() *Request {
+func NewRequest(ctx context.Context) *Request {
 	r := &Request{
+		ctx:   ctx,
 		query: url.Values{},
 	}
 

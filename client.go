@@ -1,7 +1,6 @@
 package genderize
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -20,10 +19,10 @@ type Client struct {
 }
 
 // Execute executes API request and returns result.
-func (c *Client) Execute(ctx context.Context, request *Request) (collection *Collection, err error) {
+func (c *Client) Execute(request *Request) (collection *Collection, err error) {
 	u := request.Encode(c.options.APIKey)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	req, err := http.NewRequestWithContext(request.ctx, http.MethodGet, u, nil)
 	if err != nil {
 		return
 	}
@@ -42,8 +41,8 @@ func (c *Client) Execute(ctx context.Context, request *Request) (collection *Col
 	return
 }
 
-func (c *Client) ExecuteX(ctx context.Context, request *Request) *Collection {
-	collection, err := c.Execute(ctx, request)
+func (c *Client) ExecuteX(request *Request) *Collection {
+	collection, err := c.Execute(request)
 
 	if err != nil {
 		panic(err)

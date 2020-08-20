@@ -16,9 +16,10 @@ import (
 
 func main() {
     client := genderize.NewClient()
-    req := genderize.NewRequest().Name("Alex")
+    req := genderize.NewRequest(context.TODO()).
+        Name("Alex")
 	
-    gender := client.ExecuteX(context.TODO(), req).FirstX()
+    gender := client.ExecuteX(req).FirstX()
     // Or:
     // gender := client.ExecuteX(context.TODO(), req).FindX("Alex")
 
@@ -41,12 +42,12 @@ import (
 func main() {
 	client := genderize.NewClient()
 
-	req := genderize.NewRequest().
+	req := genderize.NewRequest(context.TODO()).
 		Name("Alex").
 		Name("John").
 		Name("Alice")
 
-	collection := client.ExecuteX(context.TODO(), req)
+	collection := client.ExecuteX(req)
 
 	collection.EachX(func(g *genderize.Gender) {
 		log.Println(fmt.Sprintf("%s is %s", g.Name, g.Gender))
