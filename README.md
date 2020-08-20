@@ -1,4 +1,10 @@
 # Genderize
+
+![CircleCI](https://img.shields.io/circleci/build/github/alexeyco/genderize/master)
+[![Coverage Status](https://coveralls.io/repos/github/alexeyco/genderize/badge.svg?branch=master)](https://coveralls.io/github/alexeyco/genderize?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/alexeyco/genderize)](https://goreportcard.com/report/github.com/alexeyco/genderize)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/alexeyco/genderize)](https://pkg.go.dev/github.com/alexeyco/genderize)
+
 API-client for [genderize.io](https://genderize.io) – determine the gender of a name.
 
 ## Usage
