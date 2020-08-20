@@ -15,12 +15,12 @@ type Client struct {
 
 // Execute executes API request and returns result.
 func (c *Client) Execute(ctx context.Context, request *Request) (response *Response, info *Info, err error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, request.Encode(c.options.apiKey), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, request.Encode(c.options.APIKey), nil)
 	if err != nil {
 		return
 	}
 
-	res, err := c.options.httpClient.Do(req)
+	res, err := c.options.HTTPClient.Do(req)
 	if err != nil {
 		return
 	}
@@ -108,7 +108,7 @@ func (c *Client) processResponse(res *http.Response) (response *Response, err er
 func NewClient(options ...Option) *Client {
 	client := &Client{
 		options: &Options{
-			httpClient: http.DefaultClient,
+			HTTPClient: http.DefaultClient,
 		},
 	}
 
