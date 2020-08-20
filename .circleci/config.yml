@@ -10,9 +10,7 @@ jobs:
     working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
     steps:
       - checkout
-      - prepare:
-          name: Install tools
-          command: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.30.0
+      - run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.30.0
       - run: golangci-lint --exclude-use-default=false run ./...
 
   test:
@@ -21,15 +19,9 @@ jobs:
     working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
     steps:
       - checkout
-      - prepare:
-          name: Install tools
-          command: GO111MODULE=off go get github.com/mattn/goveralls
-      - tests:
-          name: Run tests
-          command: go test -v -cover -race -coverprofile=coverage.out
-      - upload:
-          name: Upload coverage
-          command: $GOPATH/bin/goveralls -coverprofile=/home/circleci/test/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
+      - run: GO111MODULE=off go get github.com/mattn/goveralls
+      - run: go test -v -cover -race -coverprofile=coverage.out
+      - run: $GOPATH/bin/goveralls -coverprofile=/home/circleci/test/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
 
 workflows:
   version: 2
