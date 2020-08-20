@@ -4,185 +4,117 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"net/url"
 	"strconv"
-	"sync"
 	"time"
 )
 
-type apiResponse struct {
-	Response
-	Error string `json:"error,omitempty"`
-}
-
-// Client of genderize.io.
+// Client genderize API client.
 type Client struct {
-	muHTTPClient sync.Mutex
-	httpClient   *http.Client
-
-	muAPIKey sync.Mutex
-	apiKey   string
-
-	muInfo sync.Mutex
-	info   *Info
+	options *Options
 }
 
-// SetHTTPClient HTTP client setter.
-func (c *Client) SetHTTPClient(httpClient *http.Client) *Client {
-	c.muHTTPClient.Lock()
-	defer c.muHTTPClient.Unlock()
-
-	c.httpClient = httpClient
-
-	return c
-}
-
-// SetAPIKey API key setter.
-func (c *Client) SetAPIKey(apiKey string) *Client {
-	c.muAPIKey.Lock()
-	defer c.muAPIKey.Unlock()
-
-	c.apiKey = apiKey
-
-	return c
-}
-
-// Info returns API info.
-func (c *Client) Info() *Info {
-	c.muInfo.Lock()
-	defer c.muInfo.Unlock()
-
-	return c.info
-}
-
-func (c *Client) url(name string) (s string, err error) {
-	c.muAPIKey.Lock()
-	defer c.muAPIKey.Unlock()
-
-	u, err := url.Parse(host)
+// Execute executes API request and returns result.
+func (c *Client) Execute(ctx context.Context, request *Request) (response *Response, info *Info, err error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, request.Encode(c.options.apiKey), nil)
 	if err != nil {
 		return
 	}
 
-	q := url.Values{}
-	q.Add("name", name)
-
-	if c.apiKey != "" {
-		q.Add("apikey", c.apiKey)
-	}
-
-	u.RawQuery = q.Encode()
-	s = u.String()
-
-	return
-}
-
-func (c *Client) request(ctx context.Context, u string) (r *Response, err error) {
-	c.muHTTPClient.Lock()
-	defer c.muHTTPClient.Unlock()
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	res, err := c.options.httpClient.Do(req)
 	if err != nil {
-		return nil, ErrMakeRequest
-	}
-
-	response, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, ErrResponse
+		return
 	}
 
 	defer func() {
-		_ = response.Body.Close()
+		_ = res.Body.Close()
 	}()
 
-	var res apiResponse
-	if err = json.NewDecoder(response.Body).Decode(&res); err != nil {
-		return nil, ErrResponseJSON
-	}
+	response, info, err = c.processAPIResponse(res)
 
-	if err = c.updateInfo(response.Header); err != nil {
+	return
+}
+
+func (c *Client) processAPIResponse(res *http.Response) (response *Response, info *Info, err error) {
+	var apiRes apiResponse
+	if err = json.NewDecoder(res.Body).Decode(&apiRes); err != nil {
 		return
 	}
 
-	if response.StatusCode == http.StatusOK {
-		r = &res.Response
-
-		if r.Gender != Female && r.Gender != Male {
-			r.Gender = Unknown
+	if res.StatusCode == http.StatusOK {
+		if info, err = c.processInfo(res); err != nil {
+			return
 		}
 
-		return
-	}
+		response, err = c.processResponse(res)
 
-	switch response.StatusCode {
-	case http.StatusUnauthorized:
-		return nil, ErrInvalidAPIKey
-	case http.StatusPaymentRequired:
-		return nil, ErrSubscriptionIsNotActive
-	case http.StatusUnprocessableEntity:
-		if res.Error == "Missing 'name' parameter" {
-			return nil, ErrMissingName
-		}
-
-		return nil, ErrInvalidName
-	case http.StatusTooManyRequests:
-		if res.Error == "Request limit reached" {
-			return nil, ErrRequestLimitReached
-		}
-
-		return nil, ErrRequestLimitTooLow
-	}
-
-	return nil, ErrUnknown
-}
-
-func (c *Client) updateInfo(h http.Header) (err error) {
-	c.muInfo.Lock()
-	defer c.muInfo.Unlock()
-
-	v := h.Get("X-Rate-Limit-Limit")
-	if v == "" {
-		return ErrEmptyXRateLimitLimit
-	}
-
-	if c.info.Limit, err = strconv.ParseInt(v, 10, 64); err != nil {
-		return ErrWrongXRateLimitLimit
-	}
-
-	v = h.Get("X-Rate-Limit-Remaining")
-	if v == "" {
-		return ErrEmptyXRateLimitRemaining
-	}
-
-	if c.info.Remaining, err = strconv.ParseInt(v, 10, 64); err != nil {
-		return ErrWrongXRateLimitRemaining
-	}
-
-	v = h.Get("X-Rate-Reset")
-	if v == "" {
-		return ErrEmptyXRateReset
-	}
-
-	reset, err := strconv.ParseInt(h.Get("X-Rate-Reset"), 10, 64)
-	if err != nil {
-		return ErrWrongXRateReset
-	}
-
-	c.info.Reset = time.Duration(reset) * time.Second
-
-	return nil
-}
-
-// Check returns gender info for name.
-func (c *Client) Check(ctx context.Context, name string) (res *Response, err error) {
-	u, err := c.url(name)
-	if err != nil {
-		return nil, ErrAPIURL
-	}
-
-	if res, err = c.request(ctx, u); err != nil {
 		return
 	}
 
 	return
+}
+
+func (c *Client) processInfo(res *http.Response) (info *Info, err error) {
+	i := &Info{}
+
+	if i.Limit, err = c.processHeader(res, "X-Rate-Limit-Limit"); err != nil {
+		return
+	}
+
+	if i.Remaining, err = c.processHeader(res, "X-Rate-Limit-Remaining"); err != nil {
+		return
+	}
+
+	reset, err := c.processHeader(res, "X-Rate-Reset")
+	if err == nil {
+		i.Reset = time.Duration(reset) * time.Second
+	}
+
+	info = i
+
+	return
+}
+
+func (c *Client) processHeader(res *http.Response, header string) (value int64, err error) {
+	v := res.Header.Get(header)
+
+	value, err = strconv.ParseInt(v, 10, 64)
+	if err != nil {
+		err = &ErrResponseHeader{
+			header: header,
+			value:  v,
+			err:    err,
+		}
+	}
+
+	return
+}
+
+func (c *Client) processResponse(res *http.Response) (response *Response, err error) {
+	var apiRes apiResponse
+	if err = json.NewDecoder(res.Body).Decode(&apiRes); err != nil {
+		err = &ErrResponse{
+			err: err,
+		}
+
+		return
+	}
+
+	response = &apiRes.Response
+
+	return
+}
+
+// NewClient returns new API client instance.
+func NewClient(options ...Option) *Client {
+	client := &Client{
+		options: &Options{
+			httpClient: http.DefaultClient,
+		},
+	}
+
+	for _, opt := range options {
+		opt(client.options)
+	}
+
+	return client
 }

@@ -1,56 +1,41 @@
 package genderize
 
-import "errors"
+import "fmt"
 
-var (
-	// ErrInvalidAPIKey invalid API key error.
-	ErrInvalidAPIKey = errors.New("invalid API key")
+// ErrResponseHeader API response header error.
+type ErrResponseHeader struct {
+	header string
+	value  string
+	err    error
+}
 
-	// ErrSubscriptionIsNotActive subscription is not active error.
-	ErrSubscriptionIsNotActive = errors.New("subscription is not active")
+// Header returns problem header.
+func (e *ErrResponseHeader) Header() string {
+	return e.header
+}
 
-	// ErrMissingName missing 'name' parameter error.
-	ErrMissingName = errors.New("missing 'name' parameter")
+// Value returns problem header value.
+func (e *ErrResponseHeader) Value() string {
+	return e.value
+}
 
-	// ErrInvalidName invalid 'name' parameter error.
-	ErrInvalidName = errors.New("invalid 'name' parameter")
+// Error returns error as a string.
+func (e *ErrResponseHeader) Error() string {
+	return fmt.Sprintf(`response header "%s" with value "%s" is wrong cause %s`, e.header, e.value, e.err)
+}
 
-	// ErrRequestLimitReached request limit reached error.
-	ErrRequestLimitReached = errors.New("request limit reached")
+// ErrResponse response error.
+type ErrResponse struct {
+	body []byte
+	err  error
+}
 
-	// ErrRequestLimitTooLow request limit too low to process request error.
-	ErrRequestLimitTooLow = errors.New("request limit too low to process request")
+// Body returns response body as a string.
+func (e *ErrResponse) Body() string {
+	return string(e.body)
+}
 
-	// ErrAPIURL can't generate API URL error.
-	ErrAPIURL = errors.New("can't generate API URL")
-
-	// ErrMakeRequest can't make new request error.
-	ErrMakeRequest = errors.New("can't make new request")
-
-	// ErrResponse wrong API response error.
-	ErrResponse = errors.New("wrong API response")
-
-	// ErrResponseJSON wrong API response JSON error.
-	ErrResponseJSON = errors.New("wrong API response JSON")
-
-	// ErrEmptyXRateLimitLimit empty X-Rate-Limit-Limit response header.
-	ErrEmptyXRateLimitLimit = errors.New("empty X-Rate-Limit-Limit response header")
-
-	// ErrEmptyXRateLimitRemaining empty X-Rate-Limit-Limit response header.
-	ErrEmptyXRateLimitRemaining = errors.New("empty X-Rate-Limit-Remaining response header")
-
-	// ErrEmptyXRateReset empty X-Rate-Reset response header.
-	ErrEmptyXRateReset = errors.New("empty X-Rate-Reset response header")
-
-	// ErrWrongXRateLimitLimit wrong X-Rate-Limit-Limit response header.
-	ErrWrongXRateLimitLimit = errors.New("wrong X-Rate-Limit-Limit response header")
-
-	// ErrWrongXRateLimitRemaining wrong X-Rate-Limit-Remaining response header.
-	ErrWrongXRateLimitRemaining = errors.New("wrong X-Rate-Limit-Remaining response header")
-
-	// ErrWrongXRateReset wrong X-Rate-Reset response header.
-	ErrWrongXRateReset = errors.New("wrong X-Rate-Reset response header")
-
-	// ErrUnknown unknown error.
-	ErrUnknown = errors.New("something went wrong")
-)
+// Error returns error as a string.
+func (e *ErrResponse) Error() string {
+	return fmt.Sprintf(`response body "%s" is wronf cause %s`, string(e.body), e.err)
+}
