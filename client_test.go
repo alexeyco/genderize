@@ -27,11 +27,12 @@ func testClientClient(fn testClientHandler) *http.Client {
 	}
 }
 
+// nolint:gochecknoglobals,golint,stylecheck
+var testClientErr = errors.New("wtf")
+
 func TestClient_Execute_Err(t *testing.T) {
 	httpClient := testClientClient(func(_ *http.Request) (res *http.Response, err error) {
-		err = errors.New("wtf")
-
-		return
+		return nil, testClientErr
 	})
 
 	r := genderize.NewRequest(context.TODO()).
@@ -46,9 +47,7 @@ func TestClient_Execute_Err(t *testing.T) {
 
 func TestClient_ExecuteX(t *testing.T) {
 	httpClient := testClientClient(func(_ *http.Request) (res *http.Response, err error) {
-		err = errors.New("wtf")
-
-		return
+		return nil, testClientErr
 	})
 
 	r := genderize.NewRequest(context.TODO()).

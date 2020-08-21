@@ -332,6 +332,7 @@ func TestCollection_EachX(t *testing.T) {
 	}()
 
 	cnt := 0
+
 	c.EachX(func(g *genderize.Gender) {
 		if !reflect.DeepEqual(g, testCollectionGenders[0]) && !reflect.DeepEqual(g, testCollectionGenders[1]) {
 			t.Error(`Should be one of two genders`)
@@ -369,6 +370,7 @@ func TestCollection_EachX_Panic(t *testing.T) {
 	}()
 
 	cnt := 0
+
 	c.EachX(func(g *genderize.Gender) {
 		if !reflect.DeepEqual(g, testCollectionGenders[0]) && !reflect.DeepEqual(g, testCollectionGenders[1]) {
 			t.Error(`Should be one of two genders`)
