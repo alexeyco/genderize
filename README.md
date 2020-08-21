@@ -1,6 +1,6 @@
 # Genderize
 
-![CircleCI](https://img.shields.io/circleci/build/github/alexeyco/genderize/master)
+![CircleCI](https://circleci.com/gh/alexeyco/genderize.svg?style=svg&circle-token=3259a2aa72222b784d5c52ac4b8a8b5ee73996ed)
 [![Coverage Status](https://coveralls.io/repos/github/alexeyco/genderize/badge.svg?branch=master)](https://coveralls.io/github/alexeyco/genderize?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/alexeyco/genderize)](https://goreportcard.com/report/github.com/alexeyco/genderize)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/alexeyco/genderize)](https://pkg.go.dev/github.com/alexeyco/genderize)

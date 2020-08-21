@@ -96,17 +96,17 @@ func (c *Client) processError(res *http.Response) (s string) {
 func (c *Client) processInfo(res *http.Response) (info *Info, err error) {
 	i := &Info{}
 
-	if i.Limit, err = c.processHeader(res, "X-Rate-Limit-Limit"); err != nil {
+	if i.Limit, err = c.processHeader(res, HdrXRateLimitLimit); err != nil {
 		err = fmt.Errorf(`%w %s`, ErrResponseHeader, err)
 
 		return
 	}
 
-	if i.Remaining, err = c.processHeader(res, "X-Rate-Limit-Remaining"); err != nil {
+	if i.Remaining, err = c.processHeader(res, HdrXRateLimitRemaining); err != nil {
 		return
 	}
 
-	reset, err := c.processHeader(res, "X-Rate-Reset")
+	reset, err := c.processHeader(res, HdrXRateReset)
 	if err == nil {
 		i.Reset = time.Duration(reset) * time.Second
 	}

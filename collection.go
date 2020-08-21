@@ -70,13 +70,11 @@ func (c *Collection) FindX(name string) *Gender {
 
 // First gender of collection.
 func (c *Collection) First() (g *Gender, err error) {
-	if c.Length() == 0 {
-		return nil, ErrNothingFound
-	}
-
 	for _, g = range c.genders {
 		return
 	}
+
+	err = ErrNothingFound
 
 	return
 }
