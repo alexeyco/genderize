@@ -178,9 +178,6 @@ func TestCollection_FindX(t *testing.T) {
 	}
 
 	alice := c.FindX("Alice")
-	if err != nil {
-		t.Errorf(`Should be nil, "%s" given`, err)
-	}
 
 	if !reflect.DeepEqual(alice, testCollectionGenders[0]) {
 		t.Error(`Should be equal`)
