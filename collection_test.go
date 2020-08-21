@@ -31,10 +31,11 @@ var testCollectionGenders = []*genderize.Gender{
 }
 
 type testCollectionRoundTripper struct {
+	genders []*genderize.Gender
 }
 
 func (c *testCollectionRoundTripper) RoundTrip(_ *http.Request) (res *http.Response, err error) {
-	b, err := json.Marshal(&testCollectionGenders)
+	b, err := json.Marshal(c.genders)
 	if err != nil {
 		return
 	}
@@ -53,14 +54,16 @@ func (c *testCollectionRoundTripper) RoundTrip(_ *http.Request) (res *http.Respo
 	return
 }
 
-func testCollectionClient() *http.Client {
+func testCollectionClient(genders ...*genderize.Gender) *http.Client {
 	return &http.Client{
-		Transport: &testCollectionRoundTripper{},
+		Transport: &testCollectionRoundTripper{
+			genders: genders,
+		},
 	}
 }
 
 func TestCollection_Limit(t *testing.T) {
-	httpClient := testCollectionClient()
+	httpClient := testCollectionClient(testCollectionGenders...)
 
 	r := genderize.NewRequest(context.TODO()).
 		Name("Alice", "John")
@@ -77,7 +80,7 @@ func TestCollection_Limit(t *testing.T) {
 }
 
 func TestCollection_LimitRemaining(t *testing.T) {
-	httpClient := testCollectionClient()
+	httpClient := testCollectionClient(testCollectionGenders...)
 
 	r := genderize.NewRequest(context.TODO()).
 		Name("Alice", "John")
@@ -94,7 +97,7 @@ func TestCollection_LimitRemaining(t *testing.T) {
 }
 
 func TestCollection_LimitReset(t *testing.T) {
-	httpClient := testCollectionClient()
+	httpClient := testCollectionClient(testCollectionGenders...)
 
 	r := genderize.NewRequest(context.TODO()).
 		Name("Alice", "John")
@@ -111,7 +114,7 @@ func TestCollection_LimitReset(t *testing.T) {
 }
 
 func TestCollection_Length(t *testing.T) {
-	httpClient := testCollectionClient()
+	httpClient := testCollectionClient(testCollectionGenders...)
 
 	r := genderize.NewRequest(context.TODO()).
 		Name("Alice", "John")
@@ -128,7 +131,7 @@ func TestCollection_Length(t *testing.T) {
 }
 
 func TestCollection_Find(t *testing.T) {
-	httpClient := testCollectionClient()
+	httpClient := testCollectionClient(testCollectionGenders...)
 
 	r := genderize.NewRequest(context.TODO()).
 		Name("Alice", "John")
@@ -148,7 +151,7 @@ func TestCollection_Find(t *testing.T) {
 		t.Error(`Should be equal`)
 	}
 
-	_, err = c.Find("Mike")
+	mike, err := c.Find("Mike")
 	if err == nil {
 		t.Error(`Should not be nil`)
 	}
@@ -156,13 +159,65 @@ func TestCollection_Find(t *testing.T) {
 	if !errors.Is(err, genderize.ErrNothingFound) {
 		t.Error(`Should be "genderize.ErrNothingFound"`)
 	}
+
+	if mike != nil {
+		t.Error(`Should be nil`)
+	}
 }
 
 func TestCollection_FindX(t *testing.T) {
+	httpClient := testCollectionClient(testCollectionGenders...)
+
+	r := genderize.NewRequest(context.TODO()).
+		Name("Alice", "John")
+
+	c, err := genderize.NewClient(genderize.WithHTTPClient(httpClient)).
+		Execute(r)
+	if err != nil {
+		t.Errorf(`Should be nil, "%s" given`, err)
+	}
+
+	alice := c.FindX("Alice")
+	if err != nil {
+		t.Errorf(`Should be nil, "%s" given`, err)
+	}
+
+	if !reflect.DeepEqual(alice, testCollectionGenders[0]) {
+		t.Error(`Should be equal`)
+	}
+}
+
+func TestCollection_FindX_Panic(t *testing.T) {
+	httpClient := testCollectionClient()
+
+	r := genderize.NewRequest(context.TODO()).
+		Name("Alice", "John")
+
+	c, err := genderize.NewClient(genderize.WithHTTPClient(httpClient)).
+		Execute(r)
+	if err != nil {
+		t.Errorf(`Should be nil, "%s" given`, err)
+	}
+
+	defer func() {
+		err := recover()
+		if err == nil {
+			t.Error(`Should not be nil`)
+		}
+
+		if !errors.Is(err.(error), genderize.ErrNothingFound) {
+			t.Error(`Should not be genderize.ErrNothingFound`)
+		}
+	}()
+
+	alice := c.FindX("Alice")
+	if alice != nil {
+		t.Error(`Should be nil`)
+	}
 }
 
 func TestCollection_First(t *testing.T) {
-	httpClient := testCollectionClient()
+	httpClient := testCollectionClient(testCollectionGenders...)
 
 	r := genderize.NewRequest(context.TODO()).
 		Name("Alice", "John")
@@ -184,10 +239,55 @@ func TestCollection_First(t *testing.T) {
 }
 
 func TestCollection_FirstX(t *testing.T) {
+	httpClient := testCollectionClient(testCollectionGenders...)
+
+	r := genderize.NewRequest(context.TODO()).
+		Name("Alice", "John")
+
+	c, err := genderize.NewClient(genderize.WithHTTPClient(httpClient)).
+		Execute(r)
+	if err != nil {
+		t.Errorf(`Should be nil, "%s" given`, err)
+	}
+
+	person := c.FirstX()
+
+	if !reflect.DeepEqual(person, testCollectionGenders[0]) && !reflect.DeepEqual(person, testCollectionGenders[1]) {
+		t.Error(`Should be one of two genders`)
+	}
+}
+
+func TestCollection_FirstX_Panic(t *testing.T) {
+	httpClient := testCollectionClient()
+
+	r := genderize.NewRequest(context.TODO()).
+		Name("Alice", "John")
+
+	c, err := genderize.NewClient(genderize.WithHTTPClient(httpClient)).
+		Execute(r)
+	if err != nil {
+		t.Errorf(`Should be nil, "%s" given`, err)
+	}
+
+	defer func() {
+		err := recover()
+		if err == nil {
+			t.Error(`Should not be nil`)
+		}
+
+		if !errors.Is(err.(error), genderize.ErrNothingFound) {
+			t.Error(`Should not be genderize.ErrNothingFound`)
+		}
+	}()
+
+	person := c.FirstX()
+	if person != nil {
+		t.Error(`Should be nil`)
+	}
 }
 
 func TestCollection_Each(t *testing.T) {
-	httpClient := testCollectionClient()
+	httpClient := testCollectionClient(testCollectionGenders...)
 
 	r := genderize.NewRequest(context.TODO()).
 		Name("Alice", "John")
@@ -217,4 +317,72 @@ func TestCollection_Each(t *testing.T) {
 }
 
 func TestCollection_EachX(t *testing.T) {
+	httpClient := testCollectionClient(testCollectionGenders...)
+
+	r := genderize.NewRequest(context.TODO()).
+		Name("Alice", "John")
+
+	c, err := genderize.NewClient(genderize.WithHTTPClient(httpClient)).
+		Execute(r)
+	if err != nil {
+		t.Errorf(`Should be nil, "%s" given`, err)
+	}
+
+	cnt := 0
+
+	defer func() {
+		if err := recover(); err != nil {
+			t.Errorf(`Should be nil, "%s" given`, err)
+		}
+	}()
+
+	c.EachX(func(g *genderize.Gender) {
+		if !reflect.DeepEqual(g, testCollectionGenders[0]) && !reflect.DeepEqual(g, testCollectionGenders[1]) {
+			t.Error(`Should be one of two genders`)
+		}
+
+		cnt++
+	})
+
+	if cnt != 2 {
+		t.Errorf(`Should be %d, %d given`, 2, cnt)
+	}
+}
+
+func TestCollection_EachX_Panic(t *testing.T) {
+	httpClient := testCollectionClient()
+
+	r := genderize.NewRequest(context.TODO()).
+		Name("Alice", "John")
+
+	c, err := genderize.NewClient(genderize.WithHTTPClient(httpClient)).
+		Execute(r)
+	if err != nil {
+		t.Errorf(`Should be nil, "%s" given`, err)
+	}
+
+	cnt := 0
+
+	defer func() {
+		err := recover()
+		if err == nil {
+			t.Error(`Should not be nil`)
+		}
+
+		if !errors.Is(err.(error), genderize.ErrNothingFound) {
+			t.Error(`Should not be genderize.ErrNothingFound`)
+		}
+	}()
+
+	c.EachX(func(g *genderize.Gender) {
+		if !reflect.DeepEqual(g, testCollectionGenders[0]) && !reflect.DeepEqual(g, testCollectionGenders[1]) {
+			t.Error(`Should be one of two genders`)
+		}
+
+		cnt++
+	})
+
+	if cnt != 2 {
+		t.Errorf(`Should be %d, %d given`, 2, cnt)
+	}
 }
